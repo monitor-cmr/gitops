@@ -1,0 +1,39 @@
+{
+        "index_patterns": [
+                "moment-meta-*"
+        ],
+        "template": {
+                "settings" : {
+                        "number_of_shards" : 1,
+                        "number_of_replicas" : 1
+                },
+                "mappings": {
+                        "properties": {
+                                "serial": {
+                                        "type": "text"
+                                },
+                                "moment_type": {
+                                        "type": "text"
+                                },
+                                "moment_obj": {
+                                        "type": "text",
+                                        "index": false
+                                },
+                                "moment_time": {
+                                        "type": "date",
+                                        "format": "epoch_second"
+                                },
+                                "is_video": {
+                                        "type": "boolean"
+                                },
+                                "is_picture": {
+                                        "type": "boolean"
+                                }
+                        }
+                }
+        },
+        "version": 3,
+        "_meta": {
+                "description": "Template for moment metadata"
+        }
+}

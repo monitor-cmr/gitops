@@ -1,0 +1,174 @@
+---
+# Source: opensearch/templates/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: opensearch-coordinator
+  namespace: opensearch
+  labels:
+    helm.sh/chart: opensearch-1.2.5
+    app.kubernetes.io/name: opensearch-coordinator
+    app.kubernetes.io/instance: alochym-coordinator
+    app.kubernetes.io/version: "1.1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: opensearch-coordinator
+  annotations:
+    majorVersion: "1"
+spec:
+  serviceName: opensearch-coordinator-headless
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: opensearch-coordinator
+      app.kubernetes.io/instance: alochym-coordinator
+  replicas: 2 
+  podManagementPolicy: Parallel
+  updateStrategy:
+    type: RollingUpdate
+  volumeClaimTemplates:
+  - metadata:
+      name: opensearch-coordinator
+    spec:
+      accessModes:
+      - "ReadWriteOnce"
+      storageClassName: "local-storage"        
+      resources:
+        requests:
+          storage: "10Gi"
+  template:
+    metadata:
+      name: "opensearch-coordinator"
+      labels:
+        helm.sh/chart: opensearch-1.2.5
+        app.kubernetes.io/name: opensearch-coordinator
+        app.kubernetes.io/instance: alochym-coordinator
+        app.kubernetes.io/version: "1.1.0"
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: opensearch-coordinator
+      annotations:
+        configchecksum: ffcbc7d5ed4a70929bce913b1f31d8bbe36db430b72c65cd1624eae9f1f53c3
+    spec:
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            podAffinityTerm:
+              topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchExpressions:
+                - key: app.kubernetes.io/instance
+                  operator: In
+                  values:
+                  - alochym-coordinator
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                  - opensearch-coordinator
+      terminationGracePeriodSeconds: 120
+      volumes:
+      - name: config
+        configMap:
+          name: opensearch-cluster-master-config
+      enableServiceLinks: true
+      initContainers:
+      - name: fsgroup-volume
+        image: "busybox:latest"
+        command: ['sh', '-c']
+        args:
+          - 'chown -R 1000:1000 /usr/share/opensearch/data'
+        securityContext:
+          runAsUser: 0
+        volumeMounts:
+          - name: "opensearch-coordinator"
+            mountPath: /usr/share/opensearch/data
+
+      containers:
+      - name: "opensearch"
+        securityContext:
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: true
+          runAsUser: 1000
+        command:
+        - sh
+        - -c
+        - |
+          #!/usr/bin/env bash
+          set -euo pipefail
+          ./bin/opensearch-plugin install -b https://github.com/aparo/opensearch-prometheus-exporter/releases/download/1.1.0/prometheus-exporter-1.1.0.zip
+
+          bash opensearch-docker-entrypoint.sh
+        image: "opensearchproject/opensearch:1.1.0"
+        imagePullPolicy: "IfNotPresent"
+        ports:
+        - name: http
+          containerPort: 9200
+        - name: transport
+          containerPort: 9300
+        resources:
+          limits:
+            cpu: 6000m
+            memory: 8Gi
+          requests:
+            cpu: 1000m
+            memory: 100Mi
+        env:
+        - name: node.name
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: cluster.initial_master_nodes
+          value: "opensearch-cluster-master-0,"
+        - name: discovery.seed_hosts
+          value: "opensearch-cluster-master-headless"
+        - name: cluster.name
+          value: "opensearch-cluster"
+        - name: network.host
+          value: "0.0.0.0"
+        - name: OPENSEARCH_JAVA_OPTS
+          value: "-Xmx6G -Xms6G"
+        - name: node.data
+          value: "false"
+        - name: node.ingest
+          value: "false"
+        - name: node.master
+          value: "false"
+        - name: node.remote_cluster_client
+          value: "false"
+        volumeMounts:
+        - name: "opensearch-coordinator"
+          mountPath: /usr/share/opensearch/data
+        - name: config
+          mountPath: /usr/share/opensearch/config/opensearch.yml
+          subPath: opensearch.yml
+      tolerations:
+      - effect: NoSchedule
+        operator: Exists
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - effect: NoExecute
+        operator: Exists
+      - effect: NoExecute
+        key: node.kubernetes.io/not-ready
+        operator: Exists
+      - effect: NoExecute
+        key: node.kubernetes.io/unreachable
+        operator: Exists
+      - effect: NoSchedule
+        key: node.kubernetes.io/disk-pressure
+        operator: Exists
+      - effect: NoSchedule
+        key: node.kubernetes.io/memory-pressure
+        operator: Exists
+      - effect: NoSchedule
+        key: node.kubernetes.io/pid-pressure
+        operator: Exists
+      - effect: NoSchedule
+        key: node.kubernetes.io/unschedulable
+        operator: Exists
+      - effect: NoSchedule
+        key: node.kubernetes.io/network-unavailable
+        operator: Exists          

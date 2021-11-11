@@ -1,0 +1,43 @@
+{
+   "index_patterns":[
+      "event_*"
+   ],
+   "template":{
+      "settings" : {
+         "number_of_shards" : 1,
+         "number_of_replicas" : 1
+      },
+      "mappings":{
+         "properties":{
+            "serial":{
+               "type":"text",
+               "fielddata":true
+            },
+            "person":{
+               "properties":{
+                  "person_id":{
+                     "type":"text",
+                     "fielddata":true
+                  },
+                  "recognition_time":{
+                     "type":"date",
+                     "format":"epoch_second"
+                  }
+               }
+            },
+            "place_id":{
+               "type":"text",
+               "fielddata":true
+            },
+            "time_stamp":{
+               "type":"date",
+               "format":"epoch_second"
+            }
+         }
+      }
+   },
+   "version":3,
+   "_meta":{
+      "description":"Template for face recognition metadata"
+   }
+}

@@ -1,0 +1,22 @@
+---
+# Source: opensearch/templates/networkpolicy.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: opensearch-cluster-master-opensearch-net
+  labels:
+    helm.sh/chart: opensearch-1.2.5
+    app.kubernetes.io/name: opensearch
+    app.kubernetes.io/instance: alochym
+    app.kubernetes.io/version: "1.1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: opensearch-cluster-master
+spec:
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          opensearch-cluster-master-transport-client: "true"
+  podSelector:
+    matchLabels:
+      opensearch-cluster-master-transport-client: "true"

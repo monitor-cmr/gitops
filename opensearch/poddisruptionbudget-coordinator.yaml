@@ -1,0 +1,20 @@
+---
+# Source: opensearch/templates/poddisruptionbudget.yaml
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: "opensearch-coordinator"
+  namespace: opensearch
+  labels:
+    helm.sh/chart: opensearch-1.2.5
+    app.kubernetes.io/name: opensearch-coordinator
+    app.kubernetes.io/instance: alochym-coordinator
+    app.kubernetes.io/version: "1.1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: opensearch-coordinator
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: opensearch-coordinator
+      app.kubernetes.io/instance: alochym-coordinator

@@ -1,0 +1,15 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: opensearch-production
+  namespace: opensearch  
+  annotations:
+    kubernetes.io/ingress.class: nginx  
+spec:
+  rules:
+  - host: es-moment-hcm.fcam.vn
+    http:
+      paths:
+      - backend:
+          serviceName: opensearch-coordinator-headless
+          servicePort: 9200    

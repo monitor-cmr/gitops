@@ -1,0 +1,13 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: opensearch-coordinator
+  namespace: opensearch
+spec:
+  endpoints:
+  - interval: 300s
+    port: http
+    path: /_prometheus/metrics
+  selector:
+    matchLabels:
+        app.kubernetes.io/component: opensearch-coordinator
